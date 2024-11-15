@@ -118,23 +118,28 @@ export default function CarManagement() {
   const carsPerPage = 6;
 
   useEffect(() => {
-    const fetchCars = async () => {
-      try {
-        const { data } = await getCars({
-          searchTerm: searchTerm || "",
-          page: currentPage,
-          limit: carsPerPage,
-        });
-        const { cars, totalPages } = data;
-
-        setFilteredCars(cars);
-        setTotalPages(totalPages);
-      } catch (error) {
-        console.log("Failed to fetch cars:", error);
-      }
-    };
-    fetchCars();
+    const timeoutId = setTimeout(() => {
+      const fetchCars = async () => {
+        try {
+          const { data } = await getCars({
+            searchTerm: searchTerm || "",
+            page: currentPage,
+            limit: carsPerPage,
+          });
+          const { cars, totalPages } = data;
+  
+          setFilteredCars(cars);
+          setTotalPages(totalPages);
+        } catch (error) {
+          console.log("Failed to fetch cars:", error);
+        }
+      };
+      fetchCars();
+    }, 300); 
+  
+    return () => clearTimeout(timeoutId); 
   }, [searchTerm, currentPage]);
+  
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
