@@ -8,12 +8,19 @@ export async function createUser(user: IUser) {
     console.log(user);
 
     const { fullname, email, password } = user;
-    const res = await axios.post("/api/register", {
+    const { data } = await axios.post("/api/register", {
       fullname: fullname,
       email: email,
       password: password,
     });
-    return JSON.parse(JSON.stringify(res));
+    if (data.status === 200) {
+      console.log(data);
+      const { userId } = data;
+      const { token } = data;
+      localStorage.setItem("token", token);
+      localStorage.setItem("userId", userId);
+      return JSON.parse(JSON.stringify(data));
+    } else throw new Error("Inavlid Email or Password");
   } catch (error) {
     console.error("Error creating user:", error);
   }
@@ -25,12 +32,14 @@ export async function signin(email: string, password: string) {
       email: email,
       password: password,
     });
-    console.log(data);
-    const { userId } = data;
-    const {token} = data;
-    localStorage.setItem('tokne', token);
-    localStorage.setItem("userId", userId);
-    return JSON.parse(JSON.stringify(data));
+    if (data.status === 200) {
+      console.log(data);
+      const { userId } = data;
+      const { token } = data;
+      localStorage.setItem("token", token);
+      localStorage.setItem("userId", userId);
+      return JSON.parse(JSON.stringify(data));
+    } else throw new Error("Inavlid Email or Password");
   } catch (error) {
     console.error("Error creating user:", error);
   }

@@ -1,206 +1,212 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
-import { Car, ChevronLeft, ChevronRight, Plus } from "lucide-react";
-import Link from "next/link";
-import { ICar } from "@/types/car";
-import { getCars } from "@/lib/actions/Car.actions";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-interface Car {
-  _id: string;
-  title: string;
-  description: string;
-  tags: string[];
-  images: string[];
-}
+import { Car, LogIn, UserPlus } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
+import { createUser, signin } from "@/lib/actions/User.action";
 
-// Image Carousel component
-const ImageCarousel = ({ images }: { images: string[] }) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
+export default function AuthPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const [fullname, setFullname] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const router = useRouter();
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
-    }, 3000); // Change image every 3 seconds
+  const handleSignUp = async () => {
+    setIsLoading(true);
 
-    return () => clearInterval(timer);
-  }, [images.length]);
-
-  const goToNext = () => {
-    setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
+    const user = { fullname, email, password };
+    try {
+      const response = await createUser(user);
+      toast({
+        title: "Account created",
+        description: "You have successfully signed up!",
+      });
+      router.push("/home");
+    } catch (error) {
+      console.error("Sign up error:", error);
+      toast({
+        title: "Signup failed",
+        description: "An error occurred. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const goToPrevious = () => {
-    setCurrentIndex(
-      (prevIndex) => (prevIndex - 1 + images.length) % images.length
-    );
-  };
-
-  return (
-    <div className="relative w-full h-48">
-      {images.map((image, index) => (
-        <img
-          key={index}
-          src={image}
-          alt={`Car image ${index + 1}`}
-          className={`absolute top-0 left-0 w-full h-full object-cover transition-opacity duration-500 ${
-            index === currentIndex ? "opacity-100" : "opacity-0"
-          }`}
-        />
-      ))}
-      <Button
-        variant="outline"
-        size="icon"
-        className="absolute top-1/2 left-2 transform -translate-y-1/2"
-        onClick={goToPrevious}
-      >
-        <ChevronLeft className="h-4 w-4" />
-      </Button>
-      <Button
-        variant="outline"
-        size="icon"
-        className="absolute top-1/2 right-2 transform -translate-y-1/2"
-        onClick={goToNext}
-      >
-        <ChevronRight className="h-4 w-4" />
-      </Button>
-    </div>
-  );
-};
-
-// Car card component
-const CarCard = ({ car }: { car: Car }) => (
-  <Link href={`/car/${car._id}`}>
-    <Card className="cursor-pointer">
-      <ImageCarousel images={car.images} />
-      <CardHeader>
-        <CardTitle>{car.title}</CardTitle>
-        <CardDescription>
-          {car.description.slice(0, 100) + "..."}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="flex flex-wrap gap-2">
-          {car.tags.map((tag, index) => (
-            <Badge key={index} variant="secondary">
-              {tag}
-            </Badge>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
-  </Link>
-);
-
-export default function CarManagement() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [filteredCars, setFilteredCars] = useState<ICar[]>([]);
-  const [totalPages, setTotalPages] = useState(0);
-  const carsPerPage = 6;
-
-  useEffect(() => {
-    const fetchCars = async () => {
-      try {
-        const { data } = await getCars({
-          searchTerm: searchTerm || "",
-          page: currentPage,
-          limit: carsPerPage,
-        });
-        const { cars, totalPages } = data;
-
-        setFilteredCars(cars);
-        setTotalPages(totalPages);
-      } catch (error) {
-        console.log("Failed to fetch cars:", error);
-      }
-    };
-    fetchCars();
-  }, [searchTerm, currentPage]);
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
+  const handleLogin = async () => {
+    setIsLoading(true);
+    try {
+      const res = await signin(email, password);
+      // Here you would typically send the login data to your backend
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulating API call
+      setIsLoading(false);
+      toast({
+        title: "Welcome back!",
+        description: "You have successfully logged in.",
+      });
+      router.push("/home"); // Redirect to car listing page after login
+    } catch (error) {
+      console.error("Sign in error:", error);
+      toast({
+        title: "Signin failed",
+        description: "An error occurred. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <div className="container mx-auto">
-      <header className="w-full bg-white shadow-md mt-2">
-        <div className="max-w-3xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex flex-col items-center bg-gray-100">
+      <header className="w-full bg-white shadow-md mb-8">
+        <div className="max-w-md mx-auto py-6 px-4 sm:px-6 lg:px-8">
           <h1 className="text-3xl font-bold text-gray-900 flex items-center justify-center">
-            <Car className="mr-2" /> My Cars
+            <Car className="mr-2" /> Car Management
           </h1>
         </div>
       </header>
-      <div className="flex gap-2 p-4">
-        <Input
-          type="search"
-          placeholder="Search cars..."
-          className="mb-4"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-        <Button onClick={() => setSearchTerm(searchTerm)}>Search</Button>
-        <Link href="/create">
-          <Button>
-            <Plus className="mr-2 h-4 w-4" /> Add New Car
-          </Button>
-        </Link>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-        {Array.isArray(filteredCars) &&
-          filteredCars.length > 0 &&
-          filteredCars
-            .filter((car): car is ICar & { _id: string } => !!car._id)
-            .map((car) => <CarCard key={car._id} car={car} />)}
-      </div>
-      <Pagination className="mt-4 p-4">
-        <PaginationContent>
-          <PaginationItem>
-            <PaginationPrevious
-              onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
-            />
-          </PaginationItem>
-          {[...Array(totalPages)].map((_, index) => (
-            <PaginationItem key={index}>
-              {currentPage === 1 && (
-                <PaginationLink
-                  onClick={() => handlePageChange(index + 1)}
-                  isActive={currentPage === index + 1}
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold text-center">
+            Welcome
+          </CardTitle>
+          <CardDescription className="text-center">
+            Sign up or log in to manage your cars
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Tabs defaultValue="login" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="login">Login</TabsTrigger>
+              <TabsTrigger value="signup">Sign Up</TabsTrigger>
+            </TabsList>
+            <TabsContent value="login">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="login-email">Email</Label>
+                  <Input
+                    id="login-email"
+                    type="email"
+                    placeholder="Enter your email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="login-password">Password</Label>
+                  <Input
+                    id="login-password"
+                    type="password"
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                </div>
+                <Button
+                  type="button"
+                  className="w-full"
+                  onClick={handleLogin}
+                  disabled={isLoading}
                 >
-                  {index + 1}
-                </PaginationLink>
-              )}
-            </PaginationItem>
-          ))}
-          <PaginationItem>
-            {currentPage !== totalPages && (
-              <PaginationNext
-                onClick={() =>
-                  handlePageChange(Math.min(totalPages, currentPage + 1))
-                }
-              />
-            )}
-          </PaginationItem>
-        </PaginationContent>
-      </Pagination>
+                  {isLoading ? (
+                    <LogIn className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <LogIn className="mr-2 h-4 w-4" />
+                  )}
+                  Log In
+                </Button>
+              </div>
+            </TabsContent>
+            <TabsContent value="signup">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="signup-name">Full Name</Label>
+                  <Input
+                    id="signup-name"
+                    placeholder="Enter your full name"
+                    value={fullname}
+                    onChange={(e) => setFullname(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="signup-email">Email</Label>
+                  <Input
+                    id="signup-email"
+                    type="email"
+                    placeholder="Enter your email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="signup-password">Password</Label>
+                  <Input
+                    id="signup-password"
+                    type="password"
+                    placeholder="Create a password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="signup-confirm-password">
+                    Confirm Password
+                  </Label>
+                  <Input
+                    id="signup-confirm-password"
+                    type="password"
+                    placeholder="Confirm your password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                  />
+                </div>
+                <Button
+                  type="button"
+                  className="w-full"
+                  onClick={handleSignUp}
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <UserPlus className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <UserPlus className="mr-2 h-4 w-4" />
+                  )}
+                  Sign Up
+                </Button>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+        <CardFooter className="flex justify-center">
+          <p className="text-sm text-gray-500">
+            By signing up, you agree to our Terms of Service and Privacy Policy.
+          </p>
+        </CardFooter>
+      </Card>
     </div>
   );
 }

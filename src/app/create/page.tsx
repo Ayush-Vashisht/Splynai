@@ -54,7 +54,7 @@ export default function AddCarPage() {
     }
     const res = await addCar(newCar);
     console.log('New car data:', res)
-    router.push('/')
+    router.push('/home')
   }
 
   return (

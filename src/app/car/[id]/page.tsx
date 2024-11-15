@@ -104,7 +104,7 @@ export default function CarDetailPage() {
             "The car has been successfully removed from your collection.",
           variant: "destructive",
         });
-        router.push("/"); // Redirect to car listing page after successful deletion
+        router.push("/home"); // Redirect to car listing page after successful deletion
       } else {
         throw new Error("Failed to delete car.");
       }
