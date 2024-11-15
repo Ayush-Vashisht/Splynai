@@ -39,7 +39,7 @@ export default function CarDetailPage() {
   const { id } = useParams();
 
   useEffect(() => {
-    if (id) {
+    if (id && typeof id === 'string') {
       try {
         const fetchCarDetails = async () => {
           const data = await getCar(id);
@@ -64,7 +64,7 @@ export default function CarDetailPage() {
       }
 
       // Send the updated car data to your backend
-      const res = await updateCar(id, car);
+      const res = await updateCar(id as string, car);
 
       // Check if the response is successful before proceeding
       if (res?.status === 200) {
@@ -94,7 +94,7 @@ export default function CarDetailPage() {
       }
 
       // Send a delete request to your backend
-      const res = await deleteCar(id);
+      const res = await deleteCar(id as string);
 
       // Check if the response is successful before proceeding
       if (res?.status === 200) {
@@ -117,24 +117,33 @@ export default function CarDetailPage() {
       });
     }
   };
+  type PartialCar = Partial<ICar>;
+
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    setCar((prevCar) => ({ ...prevCar, [name]: value }));
+    setCar((prevCar) => ({
+      ...(prevCar as ICar), 
+      [name]: value,
+    }));
   };
-
+  
   const handleTagsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const tags = e.target.value.split(",").map((tag) => tag.trim());
-    setCar((prevCar) => ({ ...prevCar, tags }));
+    setCar((prevCar) => ({
+      ...(prevCar as ICar),
+      tags,
+    }));
   };
+  
 
   const nextImage = () => {
-    setCurrentImageIndex((prevIndex) => (prevIndex + 1) % car.images.length);
+    if(car)setCurrentImageIndex((prevIndex) => (prevIndex + 1) % car.images.length);
   };
 
   const prevImage = () => {
-    setCurrentImageIndex(
+    if(car)setCurrentImageIndex(
       (prevIndex) => (prevIndex - 1 + car.images.length) % car.images.length
     );
   };

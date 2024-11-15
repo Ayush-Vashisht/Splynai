@@ -93,7 +93,9 @@ const CarCard = ({ car }: { car: Car }) => (
       <ImageCarousel images={car.images} />
       <CardHeader>
         <CardTitle>{car.title}</CardTitle>
-        <CardDescription>{car.description.slice(0,100)+'...'}</CardDescription>
+        <CardDescription>
+          {car.description.slice(0, 100) + "..."}
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="flex flex-wrap gap-2">
@@ -119,12 +121,12 @@ export default function CarManagement() {
     const fetchCars = async () => {
       try {
         const { data } = await getCars({
-          searchTerm: searchTerm || "", 
+          searchTerm: searchTerm || "",
           page: currentPage,
           limit: carsPerPage,
         });
         const { cars, totalPages } = data;
-        
+
         setFilteredCars(cars);
         setTotalPages(totalPages);
       } catch (error) {
@@ -165,33 +167,37 @@ export default function CarManagement() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
         {Array.isArray(filteredCars) &&
           filteredCars.length > 0 &&
-          filteredCars.map((car) => <CarCard key={car._id} car={car} />)}
+          filteredCars
+            .filter((car): car is ICar & { _id: string } => !!car._id)
+            .map((car) => <CarCard key={car._id} car={car} />)}
       </div>
       <Pagination className="mt-4 p-4">
         <PaginationContent>
           <PaginationItem>
             <PaginationPrevious
               onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
-              disabled={currentPage === 1}
             />
           </PaginationItem>
           {[...Array(totalPages)].map((_, index) => (
             <PaginationItem key={index}>
-              <PaginationLink
-                onClick={() => handlePageChange(index + 1)}
-                isActive={currentPage === index + 1}
-              >
-                {index + 1}
-              </PaginationLink>
+              {currentPage === 1 && (
+                <PaginationLink
+                  onClick={() => handlePageChange(index + 1)}
+                  isActive={currentPage === index + 1}
+                >
+                  {index + 1}
+                </PaginationLink>
+              )}
             </PaginationItem>
           ))}
           <PaginationItem>
-            <PaginationNext
-              onClick={() =>
-                handlePageChange(Math.min(totalPages, currentPage + 1))
-              }
-              disabled={currentPage === totalPages}
-            />
+            {currentPage !== totalPages && (
+              <PaginationNext
+                onClick={() =>
+                  handlePageChange(Math.min(totalPages, currentPage + 1))
+                }
+              />
+            )}
           </PaginationItem>
         </PaginationContent>
       </Pagination>
