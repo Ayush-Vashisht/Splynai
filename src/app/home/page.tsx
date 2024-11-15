@@ -180,7 +180,7 @@ export default function CarManagement() {
           </PaginationItem>
           {[...Array(totalPages)].map((_, index) => (
             <PaginationItem key={index}>
-              {currentPage === 1 && (
+              {currentPage !== 1 && (
                 <PaginationLink
                   onClick={() => handlePageChange(index + 1)}
                   isActive={currentPage === index + 1}
